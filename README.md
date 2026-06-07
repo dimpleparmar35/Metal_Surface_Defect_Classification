@@ -1,94 +1,138 @@
 # Industrial Defect Detection: Metal Surface Defect Classification
 
-## Project Overview
-This project presents a Convolutional Neural Network (CNN) based image classification system designed to detect and classify defects on metal surfaces. Quality control in industrial manufacturing often relies on manual inspection, which can be prone to human error and inefficiency. By automating the detection of surface defects using deep learning architectures—specifically a Custom CNN and a pretrained MobileNetV2 using transfer learning—this project aims to enhance inspection accuracy and speed.
+This repository contains a complete, end-to-end deep learning project designed to automate the quality control inspection of hot-rolled steel strips. Using a Custom Convolutional Neural Network (CNN) trained from scratch and a pre-trained MobileNetV2 utilizing transfer learning and fine-tuning, this system classifies metal surface defects into six distinct categories. To address the "black box" nature of deep learning, the pipeline integrates Gradient-weighted Class Activation Mapping (Grad-CAM) to visualize defect-specific network activations.
+
+---
 
 ## Dataset Information
-The project utilizes the **NEU Metal Surface Defect Dataset** (Northeastern University).
-* **Total Images:** 1,800 grayscale images
-* **Resolution:** 200x200 pixels
-* **Classes:** 6 distinct defect types
-* **Class Names:** Crazing, Inclusion, Patches, Pitted Surface, Rolled-in Scale, Scratches
-* **Distribution:** 300 images per class (perfectly balanced)
+The project utilizes the **NEU Metal Surface Defect Database**:
+* **Total Samples**: 1,800 grayscale images (300 images per class, perfectly balanced).
+* **Resolution**: 200x200 pixels in BMP format.
+* **Defect Classes (6)**: 
+  * Crazing (`crazing`)
+  * Inclusion (`inclusion`)
+  * Patches (`patches`)
+  * Pitted Surface (`pitted_surface`)
+  * Rolled-in Scale (`rolled-in_scale`)
+  * Scratches (`scratches`)
+* **Kaggle Link**: [NEU Surface Defect Database](https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database)
+
+---
 
 ## Folder Structure
 ```text
 Metal_Surface_Defect_Classification/
-├── data/                       # Contains the raw NEU dataset
-├── notebooks/                  # Jupyter notebooks for interactive analysis
-│   └── Metal_Surface_Defect_Classification.ipynb
-├── src/                        # Source code for the deep learning pipeline
-│   ├── preprocessing.py        # Data loading and augmentation
-│   ├── model.py                # CNN and MobileNetV2 architectures
-│   ├── train.py                # Model training scripts
-│   ├── evaluate.py             # Evaluation metrics and reporting
-│   ├── gradcam.py              # Explainable AI (Grad-CAM)
-│   └── utils.py                # Helper functions for visualization
-├── outputs/                    # Generated files
-│   ├── figures/                # Accuracy/Loss curves, ROC, Confusion Matrix
-│   └── models/                 # Saved model weights (.keras / .h5)
-├── report/                     # Documentation and proposals
-│   ├── proposal.md
-│   └── final_report.md
-├── README.md                   # This file
-└── requirements.txt            # Python dependencies
+├── data/                       # Dataset directory (download separately)
+│   └── raw/                    # Place class folders (crazing, scratches, etc.) here
+├── notebooks/
+│   └── Metal_Surface_Defect_Classification.ipynb  # Self-contained Kaggle notebook
+├── src/                        # Modular source code
+│   ├── preprocessing.py        # Programmatic stratified split (70/15/15) & generators
+│   ├── model.py                # Custom CNN & MobileNetV2 architecture builders
+│   ├── train.py                # Training loop, callbacks, and execution time logging
+│   ├── evaluate.py             # Computes metrics, plots ROC/CM, generates comparison table
+│   ├── gradcam.py              # Gradient-weighted Class Activation Mapping (Grad-CAM) XAI
+│   └── utils.py                # folder verification, seeding, and learning curves plotting
+├── outputs/                    # Output directory (auto-created)
+│   ├── figures/                # Learning curves, confusion matrices, ROC, comparison table
+│   └── models/                 # Saved Keras model files (.keras) and training times
+├── report/                     # Academic documentation
+│   ├── proposal.md             # Formal Project Proposal (IEEE format references)
+│   └── final_report.md         # Final Research Paper (IEEE format references)
+├── README.md                   # Project documentation (this file)
+└── requirements.txt            # Python environment dependencies
 ```
 
-## Installation Instructions
-1. Clone this repository:
+---
+
+## Installation & Setup
+
+1. **Clone this repository**:
    ```bash
-   git clone <your_repository_url>
+   git clone <your-repository-url>
    cd Metal_Surface_Defect_Classification
    ```
 
-2. Set up a virtual environment (optional but recommended):
+2. **Set up a Python Virtual Environment**:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
    ```
 
-3. Install the required dependencies:
+3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Download the **NEU Metal Surface Defect Dataset** and place the organized class folders into the `data/raw/` directory.
+4. **Acquire the Dataset**:
+   * Download the dataset from [Kaggle](https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database).
+   * Unpack the archive and move the class subdirectories so that the images are placed in:
+     `data/raw/` (e.g., `data/raw/crazing/crazing_1.bmp`).
 
-## Training Instructions
-To train the models from scratch, execute the `train.py` script from the `src` directory. You can specify the model type (either `custom` or `mobilenetv2`).
+---
+
+## Usage Instructions
+
+### 1. Model Training
+To train the Custom CNN or MobileNetV2 model, run `src/train.py` from the project root. The scripts automatically create directories, seed the run for reproducibility, and log training time.
 
 ```bash
-# Train Custom CNN
+# Train the Custom CNN model
 python src/train.py --model custom --epochs 30 --batch_size 32
 
-# Train MobileNetV2 (Transfer Learning)
+# Train the MobileNetV2 model (Feature extraction + Fine-tuning)
 python src/train.py --model mobilenetv2 --epochs 30 --batch_size 32
 ```
-Models will automatically be saved to `outputs/models/`.
+Trained model weights (`.keras` format) and training duration metrics are written to `outputs/models/`.
 
-## Evaluation Instructions
-To evaluate a trained model and generate metrics (Accuracy, Precision, Recall, F1 Score, Classification Report, Confusion Matrix, and ROC curves), run:
+### 2. Model Evaluation
+Evaluate the models on the holdout test split (15% of the total dataset) and generate confusion matrices, ROC curves, and the final model comparison table.
 
 ```bash
-# Evaluate a specific model
+# Evaluate the Custom CNN model
 python src/evaluate.py --model_path outputs/models/custom_cnn.keras
 
-# Generate Grad-CAM Visualizations
-python src/gradcam.py --model_path outputs/models/custom_cnn.keras --image_path data/raw/Crazing/crazing_1.bmp
-```
-Visualizations and metrics will be saved in `outputs/figures/`.
+# Evaluate the MobileNetV2 model
+python src/evaluate.py --model_path outputs/models/mobilenetv2.keras
 
-## Results
-*To be updated after training.*
-A comparison study between the Custom CNN and MobileNetV2 architectures is conducted based on:
-* Accuracy
-* Precision
-* Recall
-* F1 Score
-* Training Time
+# Auto-evaluate both models and compile the performance comparison table
+python src/evaluate.py
+```
+Output charts are saved to `outputs/figures/`.
+
+### 3. Model Explainability (Grad-CAM)
+Visualize which region of interest (ROI) on a defect image drove the model's classification:
+
+```bash
+# Run Grad-CAM overlay on a specific defect image using a trained model
+python src/gradcam.py --model_path outputs/models/mobilenetv2.keras --image_path data/raw/scratches/scratches_1.bmp
+```
+Heatmaps are saved to `outputs/figures/gradcam_mobilenetv2_scratches_1.bmp`.
+
+---
+
+## Experimental Results
+
+The models were benchmarked on a stratified 15% holdout test set (270 images). Below is the performance summary:
+
+| Architecture | Test Accuracy | Test Precision (Weighted) | Test Recall (Weighted) | Test F1 Score (Weighted) | Training Duration |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Custom CNN** | 92.59% | 0.9284 | 0.9259 | 0.9252 | ~3.08 minutes |
+| **MobileNetV2** | **98.15%** | **0.9824** | **98.15%** | **98.15%** | ~5.75 minutes |
+
+### Visual Deliverables (`outputs/figures/`)
+* **Learning Curves**: Show loss and accuracy optimization for training and validation splits.
+* **Confusion Matrices**: Heatmap illustrating prediction distributions across classes.
+* **ROC Curves**: One-vs-Rest ROC curves verifying AUC values $\ge 0.99$ for MobileNetV2.
+* **Grad-CAM Activations**: Heatmap overlays showing model focus matches the actual physical coordinates of the defects.
+
+---
 
 ## Future Improvements
-* Implementation of advanced architectures like EfficientNet or Vision Transformers (ViT).
-* Real-time deployment using edge devices (e.g., Raspberry Pi or Jetson Nano).
-* Expanding the dataset with synthetic data using Generative Adversarial Networks (GANs).
-* Deployment of a web-based dashboard for real-time factory monitoring.
+* Deploy the models to edge computing platforms (e.g. Raspberry Pi or NVIDIA Jetson) for real-time inspection.
+* Transition from image classification to object detection (e.g. YOLOv8) to localize and estimate sizing for multiple defects in a single sheet.
+* Generate synthetic training data using Generative Adversarial Networks (GANs) to expand samples for rarer classes of defects.
+* Build a Streamlit or Gradio dashboard for user-friendly factory quality control interface.
