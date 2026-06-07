@@ -33,7 +33,7 @@ The primary challenge is the accurate identification and classification of vario
 
 ## 8. Dataset Selection
 * **Dataset Name:** NEU Metal Surface Defect Dataset
-* **Dataset Source and Download Link:** [Kaggle - NEU Metal Surface Defects Data](https://www.kaggle.com/datasets/lsind18/gemstones-images) (Note: Hosted on various Kaggle repositories and Northeastern University database).
+* **Dataset Source and Download Link:** [Kaggle - NEU Metal Surface Defects Data](https://www.kaggle.com/datasets/kaustubhdikshit/neu-surface-defect-database) (Note: Hosted on various Kaggle repositories and Northeastern University database).
 * **Dataset Description:** The dataset contains grayscale images of hot-rolled steel strips with six typical surface defects.
 * **Number of Images:** 1,800
 * **Number of Classes:** 6
