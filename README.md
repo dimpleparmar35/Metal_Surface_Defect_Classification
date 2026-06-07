@@ -1,5 +1,14 @@
 # Industrial Defect Detection: Metal Surface Defect Classification
 
+**Author:** Dimple Parmar  
+**Course:** Machine Learning
+
+## 📝 Phase 2 Submission Links
+* **GitHub Repository:** [https://github.com/dimpleparmar35/Metal_Surface_Defect_Classification](https://github.com/dimpleparmar35/Metal_Surface_Defect_Classification)
+* **Kaggle Notebook:** [Insert your Kaggle Notebook Link here, if applicable]
+
+---
+
 This repository contains a complete, end-to-end deep learning project designed to automate the quality control inspection of hot-rolled steel strips. Using a Custom Convolutional Neural Network (CNN) trained from scratch and a pre-trained MobileNetV2 utilizing transfer learning and fine-tuning, this system classifies metal surface defects into six distinct categories. To address the "black box" nature of deep learning, the pipeline integrates Gradient-weighted Class Activation Mapping (Grad-CAM) to visualize defect-specific network activations.
 
 ---
