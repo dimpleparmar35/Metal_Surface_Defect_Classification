@@ -50,7 +50,7 @@ def train_model(model_type: str, data_dir: str, epochs: int = 30, batch_size: in
         batch_size=batch_size, 
         img_size=(224, 224)
     )
-    num_classes = train_gen.num_classes
+    num_classes = len(train_gen.class_indices)
     
     # Instantiate the selected model architecture
     if model_type == 'custom':
