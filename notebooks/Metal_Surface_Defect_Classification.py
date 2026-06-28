@@ -72,34 +72,72 @@ print("GPU Available:", tf.config.list_physical_devices('GPU'))
 # This notebook auto-detects the dataset whether running on Kaggle or locally.
 
 # %%
-# ── Search in multiple locations (Kaggle + local) ─────────────────────────────
+# ── Auto-discover dataset path ─────────────────────────────────────────────────
+# Step 1: Print the full Kaggle input tree so we can always see exactly
+#         what paths are available (very useful for debugging).
+print("=== Kaggle Input Directory Structure ===")
+kaggle_input = '/kaggle/input'
+if os.path.isdir(kaggle_input):
+    for root, dirs, files in os.walk(kaggle_input):
+        depth = root.replace(kaggle_input, '').count(os.sep)
+        indent = '  ' * depth
+        print(f"{indent}{os.path.basename(root)}/")
+        if depth >= 3:   # Don't print individual file names, just folders
+            dirs[:] = []
+else:
+    print("Not running on Kaggle — local environment detected.")
+
+# Step 2: Smart recursive search — find the folder that contains
+#         the 6 NEU defect class subfolders directly.
+VALID_CLASSES = {'crazing', 'inclusion', 'patches',
+                 'pitted_surface', 'rolled-in_scale', 'scratches'}
+
+DATA_DIR = None
+
+# First try well-known fixed paths
 possible_dirs = [
     '/kaggle/input/neu-surface-defect-database/NEU-DET/train/images',
     '/kaggle/input/neu-surface-defect-database/NEU-DET/images',
     '/kaggle/input/neu-surface-defect-database/NEU-DET',
     '/kaggle/input/neu-surface-defect-database',
-    '/kaggle/input/kaustubhdikshit-neu-surface-defect-database/NEU-DET/train/images',
     '../data/raw',
     './data/raw',
 ]
 
-DATA_DIR = None
 for path in possible_dirs:
     if os.path.isdir(path):
-        # Check it actually contains image files
-        test_images = glob.glob(os.path.join(path, '**', '*.bmp'), recursive=True) + \
-                      glob.glob(os.path.join(path, '**', '*.jpg'), recursive=True) + \
-                      glob.glob(os.path.join(path, '**', '*.png'), recursive=True)
-        if test_images:
+        subdirs = set(os.listdir(path))
+        # Accept if at least 4 of our 6 class names are direct subdirs
+        if len(subdirs & VALID_CLASSES) >= 4:
             DATA_DIR = path
-            print(f"✅ Dataset found at: {DATA_DIR}  ({len(test_images)} images detected)")
+            print(f"\n✅ Dataset found (class folders) at: {DATA_DIR}")
+            break
+        # Or accept if it contains image files anywhere beneath it
+        imgs = (glob.glob(os.path.join(path, '**', '*.bmp'), recursive=True) +
+                glob.glob(os.path.join(path, '**', '*.jpg'), recursive=True) +
+                glob.glob(os.path.join(path, '**', '*.png'), recursive=True))
+        if imgs:
+            DATA_DIR = path
+            print(f"\n✅ Dataset found (images) at: {DATA_DIR}  ({len(imgs)} files)")
+            break
+
+# If still not found, walk ALL of /kaggle/input and find the deepest
+# directory that contains at least 4 of the 6 class subfolders.
+if DATA_DIR is None and os.path.isdir(kaggle_input):
+    print("\n🔍 Searching entire /kaggle/input for class folders...")
+    for root, dirs, files in os.walk(kaggle_input):
+        if len(set(dirs) & VALID_CLASSES) >= 4:
+            DATA_DIR = root
+            print(f"✅ Auto-discovered at: {DATA_DIR}")
             break
 
 if DATA_DIR is None:
     raise FileNotFoundError(
-        "❌ Dataset not found! On Kaggle: click '+ Add Data' and add "
-        "'kaustubhdikshit/neu-surface-defect-database'. "
-        "Locally: place images in data/raw/<class_name>/ folders."
+        "❌ Dataset not found!\n"
+        "On Kaggle  → click '+ Add Input' on the right panel and search for:\n"
+        "             'kaustubhdikshit/neu-surface-defect-database'\n"
+        "             then click Run All again.\n"
+        "Locally    → place images in  data/raw/<class_name>/  folders."
     )
 
 # Create output directories
