@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Defect Detection | Dimple Parmar</title>
+    <meta name="description" content="Phase 3 ML Project: Automated Metal Surface Defect Classification using CNN and MobileNetV2 Transfer Learning by Dimple Parmar">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <div class="logo">Defect<span class="highlight">Vision</span></div>
+            <ul class="nav-links">
+                <li><a href="#hero">Overview</a></li>
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#dataset">Dataset</a></li>
+                <li><a href="#methodology">Methodology</a></li>
+                <li><a href="#results">Results</a></li>
+                <li><a href="#xai">Grad-CAM</a></li>
+                <li><a href="#error">Error Analysis</a></li>
+                <li><a href="#conclusion">Conclusion</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+
+        <!-- ===== HERO ===== -->
+        <section id="hero" class="hero-section">
+            <div class="hero-content fade-in-section">
+                <div class="badge">🎓 Machine Learning · Phase 3 Final Report</div>
+                <h1 class="gradient-text">Industrial Defect Detection</h1>
+                <h2 class="hero-subtitle">Metal Surface Defect Classification Using Deep CNNs & Transfer Learning</h2>
+                <p class="hero-desc">
+                    Replacing slow, error-prone manual inspection with a fully automated AI pipeline that detects and classifies hot-rolled steel surface defects with <strong>98.15% accuracy</strong> using the NEU Metal Surface Defect Database.
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-pill"><span class="stat-num">98.15%</span><span class="stat-label">MobileNetV2 Accuracy</span></div>
+                    <div class="stat-pill"><span class="stat-num">92.59%</span><span class="stat-label">Custom CNN Accuracy</span></div>
+                    <div class="stat-pill"><span class="stat-num">1,800</span><span class="stat-label">Total Images</span></div>
+                    <div class="stat-pill"><span class="stat-num">6</span><span class="stat-label">Defect Classes</span></div>
+                    <div class="stat-pill"><span class="stat-num">0.99</span><span class="stat-label">MobileNetV2 AUC</span></div>
+                </div>
+                <div class="author-card glass-panel">
+                    <div class="author-avatar">👩‍🎓</div>
+                    <div class="author-info">
+                        <h3>Dimple Parmar</h3>
+                        <p>Machine Learning Course Project · NEU Metal Surface Defect Database</p>
+                        <div class="links-row">
+                            <a href="https://github.com/dimpleparmar35/Metal_Surface_Defect_Classification" target="_blank" class="link-btn">📁 GitHub Repo</a>
+                            <a href="https://www.kaggle.com/code/dimpleparmar23/industrial-defect-detection" target="_blank" class="link-btn">📓 Kaggle Notebook</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PROBLEM STATEMENT ===== -->
+        <section id="problem" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">01 · Context</span>
+                <h2 class="section-title">The <span class="highlight">Problem Statement</span></h2>
+            </div>
+            <div class="problem-grid">
+                <div class="glass-panel problem-main">
+                    <h3>🏭 Background & Motivation</h3>
+                    <p>In the metallurgical industry, surface defects on hot-rolled steel strips severely impact the <strong>mechanical strength, corrosion resistance, and visual appearance</strong> of the final product. Defects occur due to rolling roll wear, mechanical vibration, slab impurities, and uneven cooling temperatures.</p>
+                    <p>Historically, quality control relied on manual visual inspection. Human inspectors cannot keep pace with rolling speeds exceeding <strong>20 meters per second</strong>, and fatigue leads to inconsistent error rates, causing both false positives (discarding good steel) and false negatives (shipping defective steel).</p>
+                    <p>This creates an urgent need for an automated, real-time, and highly accurate surface inspection system that does not rely on human operators or brittle, handcrafted mathematical feature descriptors.</p>
+                </div>
+                <div class="problem-cards">
+                    <div class="glass-panel mini-card red-card"><div class="mini-icon">⚠️</div><h4>False Negatives</h4><p>Defective steel escapes inspection and reaches customers, causing safety hazards and costly recalls.</p></div>
+                    <div class="glass-panel mini-card orange-card"><div class="mini-icon">🚫</div><h4>False Positives</h4><p>Good steel is incorrectly rejected, directly increasing material waste and production costs.</p></div>
+                    <div class="glass-panel mini-card blue-card"><div class="mini-icon">⚡</div><h4>Speed Limitation</h4><p>Manual inspection cannot keep pace with modern production lines, creating critical QA bottlenecks.</p></div>
+                </div>
+            </div>
+            <div class="glass-panel research-questions">
+                <h3>🔬 Research Questions</h3>
+                <div class="rq-grid">
+                    <div class="rq-item"><span class="rq-num">Q1</span><p>Can deep CNNs effectively automate classification of 6 distinct steel surface defects with accuracy exceeding 90%?</p></div>
+                    <div class="rq-item"><span class="rq-num">Q2</span><p>How does a Custom CNN trained from scratch compare to fine-tuned MobileNetV2 Transfer Learning in accuracy and training efficiency?</p></div>
+                    <div class="rq-item"><span class="rq-num">Q3</span><p>Can Grad-CAM heatmaps visually prove that the neural network focuses on actual physical defect regions rather than background noise?</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== DATASET ===== -->
+        <section id="dataset" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">02 · Data</span>
+                <h2 class="section-title">NEU Metal Surface <span class="highlight">Defect Dataset</span></h2>
+            </div>
+            <div class="dataset-layout">
+                <div class="glass-panel dataset-info">
+                    <h3>📊 Dataset Overview</h3>
+                    <p>The <strong>NEU Metal Surface Defect Database</strong> is a publicly available benchmark dataset containing grayscale photographs of hot-rolled steel strips showing six distinct surface defect categories. The dataset is perfectly balanced — 300 images per class — eliminating class-imbalance bias.</p>
+                    <div class="info-table">
+                        <div class="info-row"><span class="info-label">Total Images</span><span class="info-value highlight">1,800</span></div>
+                        <div class="info-row"><span class="info-label">Number of Classes</span><span class="info-value highlight">6</span></div>
+                        <div class="info-row"><span class="info-label">Images per Class</span><span class="info-value highlight">300 (Perfectly Balanced)</span></div>
+                        <div class="info-row"><span class="info-label">Image Format</span><span class="info-value">Grayscale BMP</span></div>
+                        <div class="info-row"><span class="info-label">Original Resolution</span><span class="info-value">200 × 200 pixels</span></div>
+                        <div class="info-row"><span class="info-label">Resized To</span><span class="info-value">224 × 224 pixels</span></div>
+                        <div class="info-row"><span class="info-label">Train / Val / Test</span><span class="info-value highlight">70% / 15% / 15%</span></div>
+                        <div class="info-row"><span class="info-label">Training Images</span><span class="info-value">1,260</span></div>
+                        <div class="info-row"><span class="info-label">Validation Images</span><span class="info-value">270</span></div>
+                        <div class="info-row"><span class="info-label">Test Images (Holdout)</span><span class="info-value">270</span></div>
+                    </div>
+                </div>
+                <div class="glass-panel defect-samples">
+                    <h3>🔍 Real Dataset Samples — All 6 Defect Classes</h3>
+                    <img src="assets/eda_defect_samples.png" alt="All 6 Defect Classes from NEU Dataset" />
+                    <p class="img-caption">Actual images from the NEU Metal Surface Defect Database. Each row shows a different defect: Crazing, Inclusion, Patches, Pitted Surface, Rolled-in Scale, and Scratches.</p>
+                </div>
+            </div>
+
+            <!-- EDA Class Distribution - REAL OUTPUT IMAGE -->
+            <div class="glass-panel full-chart-card fade-in-section">
+                <h3>📊 Class Distribution — Real EDA Output</h3>
+                <p class="chart-desc">Exploratory Data Analysis confirms the dataset is perfectly balanced across all 6 defect classes with exactly 300 images each. This eliminates class-imbalance bias from model training.</p>
+                <img src="assets/eda_class_distribution.png" alt="EDA Class Distribution Bar Chart" />
+                <p class="img-caption">Real output from <code>src/evaluate.py</code> EDA step — confirms 300 images per class across all 6 categories.</p>
+            </div>
+
+            <div class="class-pills-container">
+                <div class="class-pill">🌀 Crazing — 300 imgs</div>
+                <div class="class-pill">⚫ Inclusion — 300 imgs</div>
+                <div class="class-pill">🟤 Patches — 300 imgs</div>
+                <div class="class-pill">🔴 Pitted Surface — 300 imgs</div>
+                <div class="class-pill">🔵 Rolled-in Scale — 300 imgs</div>
+                <div class="class-pill">⚡ Scratches — 300 imgs</div>
+            </div>
+        </section>
+
+        <!-- ===== METHODOLOGY ===== -->
+        <section id="methodology" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">03 · Approach</span>
+                <h2 class="section-title">Proposed <span class="highlight">Methodology</span></h2>
+            </div>
+            <div class="pipeline-steps">
+                <div class="pipeline-step glass-panel">
+                    <div class="step-number">01</div>
+                    <div class="step-content"><h3>📥 Data Ingestion & Stratified Split</h3><p>Raw BMP images loaded via dynamic OS path scanning into Pandas DataFrames. Pixel values normalized from [0,255] → [0.0,1.0]. All images resized to <strong>224×224px</strong> to match MobileNetV2's ImageNet pre-training resolution. A stratified 70/15/15 split ensures equal class representation across Training (1,260), Validation (270), and Test (270) sets.</p></div>
+                </div>
+                <div class="pipeline-step glass-panel">
+                    <div class="step-number">02</div>
+                    <div class="step-content"><h3>🔄 Real-Time Data Augmentation (Training Only)</h3><p>To prevent overfitting on the small dataset, Keras ImageDataGenerator applies random augmentations during every training epoch: rotations (±20°), horizontal & vertical flips, width/height shifts (10%), zoom (±20%), and brightness shifts (80%–120%). Vertical flips are valid because steel defects have no semantic orientation.</p></div>
+                </div>
+                <div class="pipeline-step glass-panel">
+                    <div class="step-number">03</div>
+                    <div class="step-content"><h3>🧠 Model 1: Custom CNN (4 Convolutional Blocks)</h3><p>A sequential CNN built from scratch. Four Conv2D blocks with doubling filter sizes (32 → 64 → 128 → 256), each followed by Batch Normalization and MaxPooling(2×2). Classification head: Flatten → Dense(512, Dropout 0.5) → Dense(256, Dropout 0.5) → Softmax(6). Optimizer: Adam (lr=0.001). Callbacks: EarlyStopping, ReduceLROnPlateau, ModelCheckpoint.</p></div>
+                </div>
+                <div class="pipeline-step glass-panel">
+                    <div class="step-number">04</div>
+                    <div class="step-content"><h3>🚀 Model 2: MobileNetV2 Transfer Learning (2-Phase)</h3><p><strong>Phase 1 — Feature Extraction:</strong> MobileNetV2 base weights fully frozen. Custom head (GlobalAvgPool → Dense 256 → Dropout 0.5 → Softmax) trained for 15 epochs at lr=0.001. <strong>Phase 2 — Fine-Tuning:</strong> All layers from index 100+ unfrozen. Trained at very low lr=0.00001 to adapt to steel textures without catastrophic forgetting of ImageNet weights.</p></div>
+                </div>
+                <div class="pipeline-step glass-panel">
+                    <div class="step-number">05</div>
+                    <div class="step-content"><h3>📈 Evaluation, Metrics & Grad-CAM Explainability</h3><p>Both models evaluated on the 270-image holdout Test Set using Accuracy, Weighted Precision, Recall, F1 Score, Confusion Matrix, and One-vs-Rest ROC Curves (AUC). <strong>Grad-CAM</strong> heatmaps generated on the final convolutional layer to visually verify the model localizes the actual physical defect regions correctly.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== RESULTS ===== -->
+        <section id="results" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">04 · Outcomes</span>
+                <h2 class="section-title">Real Experimental <span class="highlight">Results</span></h2>
+            </div>
+
+            <!-- Performance Table -->
+            <div class="glass-panel result-highlight glow-border">
+                <h3>🏆 Final Model Performance — Holdout Test Set (270 Images)</h3>
+                <div class="perf-table">
+                    <div class="perf-header"><span>Model</span><span>Test Accuracy</span><span>Precision</span><span>Recall</span><span>F1 Score</span><span>Train Time</span></div>
+                    <div class="perf-row"><span class="model-name">Custom CNN</span><span>92.59%</span><span>0.9284</span><span>0.9259</span><span>0.9252</span><span>~3.08 min</span></div>
+                    <div class="perf-row winner-row"><span class="model-name winner">🏆 MobileNetV2</span><span class="winner">98.15%</span><span class="winner">0.9824</span><span class="winner">0.9815</span><span class="winner">0.9815</span><span class="winner">~5.75 min</span></div>
+                </div>
+                <!-- REAL comparison_table.png OUTPUT -->
+                <img src="assets/comparison_table.png" alt="Real Model Comparison Bar Chart Output" class="full-width-img" />
+                <p class="img-caption">Real output from <code>src/evaluate.py</code> — Comparison of Custom CNN vs MobileNetV2 across all evaluation metrics.</p>
+            </div>
+
+            <!-- Learning Curves — BOTH REAL -->
+            <h3 class="subsection-title">📉 Training & Validation Learning Curves</h3>
+            <div class="charts-2col">
+                <div class="glass-panel chart-card">
+                    <h3>Custom CNN — Learning Curves</h3>
+                    <p class="chart-desc">The Custom CNN required ~25 epochs to converge. Minor validation loss oscillations were dampened by the ReduceLROnPlateau callback. A visible gap between training and validation curves indicates mild overfitting, despite dropout regularization.</p>
+                    <img src="assets/custom_learning_curves.png" alt="Real Custom CNN Learning Curves" />
+                    <p class="img-caption">Real output from <code>src/train.py</code> — Custom CNN training history.</p>
+                </div>
+                <div class="glass-panel chart-card">
+                    <h3>MobileNetV2 — Learning Curves</h3>
+                    <p class="chart-desc">Transfer Learning converged dramatically faster. Validation accuracy stabilized at ~95.2% in just 10 epochs. After fine-tuning began at epoch 15, test accuracy jumped to 98.15%, demonstrating the power of ImageNet pre-trained representations.</p>
+                    <img src="assets/mobilenetv2_learning_curves.png" alt="Real MobileNetV2 Learning Curves" />
+                    <p class="img-caption">Real output from <code>src/train.py</code> — MobileNetV2 training history including fine-tuning phase.</p>
+                </div>
+            </div>
+
+            <!-- Confusion Matrices — BOTH REAL -->
+            <h3 class="subsection-title">🔲 Confusion Matrices</h3>
+            <div class="charts-2col">
+                <div class="glass-panel chart-card">
+                    <h3>Custom CNN — Confusion Matrix</h3>
+                    <p class="chart-desc">The Custom CNN struggled to distinguish visually similar defect pairs: 'Crazing' vs 'Scratches' (both show linear patterns) and 'Rolled-in Scale' vs 'Inclusion' (similar irregular textures). These are the primary sources of the 7.41% error rate.</p>
+                    <img src="assets/confusion_matrix_custom.png" alt="Real Custom CNN Confusion Matrix" />
+                    <p class="img-caption">Real output from <code>src/evaluate.py</code> — Custom CNN test set predictions.</p>
+                </div>
+                <div class="glass-panel chart-card">
+                    <h3>MobileNetV2 — Confusion Matrix</h3>
+                    <p class="chart-desc">MobileNetV2 achieves near-perfect diagonal classification. The deep ImageNet features resolved almost all edge cases between similar defect classes. Only minor confusion remains between Rolled-in Scale and Inclusion, resulting in just 1.85% error rate.</p>
+                    <img src="assets/confusion_matrix_mobilenetv2.png" alt="Real MobileNetV2 Confusion Matrix" />
+                    <p class="img-caption">Real output from <code>src/evaluate.py</code> — MobileNetV2 test set predictions.</p>
+                </div>
+            </div>
+
+            <!-- ROC Curves — BOTH REAL -->
+            <h3 class="subsection-title">📈 ROC Curves & AUC Scores</h3>
+            <div class="charts-2col">
+                <div class="glass-panel chart-card">
+                    <h3>Custom CNN — ROC Curves</h3>
+                    <p class="chart-desc">One-vs-Rest ROC curves for the Custom CNN show class-wise AUC scores ranging from 0.96 to 0.98. Strong discriminative ability across all 6 classes, confirming the model is a reliable classifier even at 92.59% accuracy.</p>
+                    <img src="assets/roc_curves_custom.png" alt="Real Custom CNN ROC Curves" />
+                    <p class="img-caption">Real output from <code>src/evaluate.py</code> — One-vs-Rest ROC for Custom CNN.</p>
+                </div>
+                <div class="glass-panel chart-card">
+                    <h3>MobileNetV2 — ROC Curves (AUC = 0.99)</h3>
+                    <p class="chart-desc">MobileNetV2 achieves an AUC of 0.99 for all 6 defect classes — the highest possible near-perfect discriminative ability. Near-zero false alarm rate makes this model suitable for high-stakes factory quality assurance deployment.</p>
+                    <img src="assets/roc_curves_mobilenetv2.png" alt="Real MobileNetV2 ROC Curves" />
+                    <p class="img-caption">Real output from <code>src/evaluate.py</code> — One-vs-Rest ROC for MobileNetV2.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== GRAD-CAM XAI ===== -->
+        <section id="xai" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">05 · Explainability</span>
+                <h2 class="section-title">Grad-CAM <span class="highlight">Explainable AI</span></h2>
+            </div>
+            <div class="split-layout">
+                <div class="glass-panel text-content">
+                    <h3>🔥 Opening the Black Box</h3>
+                    <p>Deep learning models are frequently criticized as "black boxes." Before deploying an AI system in a high-stakes manufacturing environment, it is critical to prove <em>why</em> the model makes its classification decisions.</p>
+                    <p>We implemented <strong>Gradient-weighted Class Activation Mapping (Grad-CAM)</strong> using the gradients of the target class score flowing into the final convolutional layer to produce a spatial heatmap localization.</p>
+                    <div class="insight-box">
+                        <div class="insight-icon">✅</div>
+                        <p><strong>Verified Result:</strong> The high-activation zones (deep red areas) on the Grad-CAM overlays physically map onto the exact location of the steel surface defects. The AI is genuinely acting as a computerized quality inspector — not relying on background noise.</p>
+                    </div>
+                    <div class="insight-box purple-insight">
+                        <div class="insight-icon">🎯</div>
+                        <p><strong>Industrial Impact:</strong> This interpretability is essential for regulatory compliance and building factory operator trust in an AI-driven inspection system.</p>
+                    </div>
+                </div>
+                <div class="glass-panel image-content glow-border">
+                    <!-- REAL gradcam_comparison_sample.png OUTPUT -->
+                    <img src="assets/gradcam_comparison_sample.png" alt="Real Grad-CAM Heatmap Visualization" />
+                    <p class="img-caption">Real output from <code>src/gradcam.py</code> — Grad-CAM heatmaps across multiple defect classes. Red zones = highest neural network activation. Perfectly aligned with physical defects.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ERROR ANALYSIS ===== -->
+        <section id="error" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">06 · Diagnostics</span>
+                <h2 class="section-title">Error <span class="highlight">Analysis</span></h2>
+            </div>
+            <div class="glass-panel full-chart-card">
+                <h3>🔎 Where the Model Gets Confused — Misclassified Samples</h3>
+                <p class="chart-desc">This real output shows the images from the test set where the Custom CNN made incorrect predictions. The top row shows the true defect class, the bottom row shows what the model predicted instead. These misclassifications occur between visually similar defect types that share linear structural patterns (e.g., Crazing and Scratches). MobileNetV2 successfully resolved most of these edge cases.</p>
+                <img src="assets/error_analysis_samples.png" alt="Real Error Analysis Misclassified Samples" />
+                <p class="img-caption">Real output from <code>src/evaluate.py</code> — Misclassified test samples showing where and why the Custom CNN made mistakes.</p>
+            </div>
+        </section>
+
+        <!-- ===== CONCLUSION ===== -->
+        <section id="conclusion" class="content-section fade-in-section">
+            <div class="section-header">
+                <span class="section-tag">07 · Summary</span>
+                <h2 class="section-title">Conclusion & <span class="highlight">Future Work</span></h2>
+            </div>
+            <div class="conclusion-grid">
+                <div class="glass-panel conclusion-main">
+                    <h3>🎯 Key Findings</h3>
+                    <ul class="conclusion-list">
+                        <li><strong>Transfer Learning is Superior:</strong> Fine-tuned MobileNetV2 achieved 98.15% accuracy and AUC=0.99, vastly outperforming Custom CNN's 92.59% on the 270-image holdout test set.</li>
+                        <li><strong>Custom CNN is Still Viable:</strong> The scratch-built model is lighter (17 MB vs 33 MB), faster (3.08 min vs 5.75 min), and achieves industrially acceptable 92.59% accuracy for resource-constrained deployments.</li>
+                        <li><strong>Grad-CAM Validates Trust:</strong> Heatmap overlays confirm models focus on actual physical defect anomalies, not background noise — critical for regulatory compliance.</li>
+                        <li><strong>Data Augmentation is Essential:</strong> Real-time augmentation (flips, rotations, zoom, brightness) was critical to prevent overfitting on the small 1,800-image dataset.</li>
+                        <li><strong>Stratified Split Ensures Fairness:</strong> The 70/15/15 stratified split guarantees equal class representation in training, validation, and holdout test sets.</li>
+                    </ul>
+                </div>
+                <div class="future-cards">
+                    <div class="glass-panel future-card"><div class="future-icon">🎯</div><h4>Object Detection (YOLOv8)</h4><p>Transition from classification to object detection to localize and draw bounding boxes around multiple defects simultaneously on a single steel sheet.</p></div>
+                    <div class="glass-panel future-card"><div class="future-icon">🔬</div><h4>Edge Device Deployment</h4><p>Deploy lightweight model on NVIDIA Jetson Nano mounted above the production belt for real-time factory inspection at rolling speed.</p></div>
+                    <div class="glass-panel future-card"><div class="future-icon">🤖</div><h4>GAN Synthetic Data</h4><p>Use Generative Adversarial Networks to synthesize rare defect images and expand training dataset beyond 1,800 samples for even higher accuracy.</p></div>
+                </div>
+            </div>
+
+            <div class="glass-panel references">
+                <h3>📚 References (IEEE Format)</h3>
+                <ol class="ref-list">
+                    <li>[1] Q. Luo et al., "Automated Visual Defect Detection for Flat Steel Surface: A Survey," <em>IEEE Trans. Instrum. Meas.</em>, vol. 69, no. 9, pp. 6261–6280, 2020.</li>
+                    <li>[2] K. Song and Y. Yan, "A noise robust method based on CLBP for hot-rolled steel strip surface defects," <em>Appl. Surf. Sci.</em>, vol. 285, pp. 858–864, 2013.</li>
+                    <li>[3] L. Yi, G. Li, and M. Jiang, "End-to-end steel strip surface defects recognition based on CNNs," <em>Steel Res. Int.</em>, vol. 88, no. 2, 2017.</li>
+                    <li>[4] K. He et al., "Deep residual learning for image recognition," in <em>Proc. IEEE CVPR</em>, 2016, pp. 770–778.</li>
+                    <li>[5] M. Sandler et al., "MobileNetV2: Inverted Residuals and Linear Bottlenecks," in <em>Proc. IEEE/CVF CVPR</em>, 2018, pp. 4510–4520.</li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>Phase 3 · Machine Learning Final Report · <strong>Dimple Parmar</strong></p>
+            <p>Dataset: NEU Metal Surface Defect Database · All charts are real model outputs · GitHub: dimpleparmar35</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
