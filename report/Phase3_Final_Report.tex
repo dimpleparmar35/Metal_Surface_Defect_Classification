@@ -1,0 +1,226 @@
+\documentclass[conference, a4paper]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{algorithm}
+\usepackage{multirow}
+
+\begin{document}
+
+\title{Industrial Defect Detection: Automated Metal Surface Defect Classification Using Deep Convolutional Neural Networks and Transfer Learning}
+
+\author{\IEEEauthorblockN{Dimple Parmar}
+\IEEEauthorblockA{\textit{Machine Learning Course Project} \\
+}}
+
+\maketitle
+
+\begin{abstract}
+Surface defect detection is an essential process in metallurgical manufacturing to guarantee material quality, structural integrity, and aesthetic standards. Traditional methods relying on manual visual inspection are highly inefficient, expensive, and prone to human error due to fatigue and rapid production speeds. This study proposes a highly accurate, automated deep learning framework for classifying hot-rolled steel surface defects. We developed a Custom Convolutional Neural Network (CNN) trained entirely from scratch and benchmarked it against a transfer learning approach leveraging the pre-trained MobileNetV2 architecture. Both models were rigorously trained, validated, and evaluated on the public NEU Metal Surface Defect Database, which contains 1,800 grayscale images distributed equally across six distinct defect categories (Crazing, Inclusion, Patches, Pitted Surface, Rolled-in Scale, and Scratches). To ensure robust evaluation and prevent data leakage, a programmatic, stratified 70/15/15 train/validation/test split was implemented alongside real-time data augmentation. The MobileNetV2 transfer learning model, utilizing a combination of frozen feature extraction and subsequent fine-tuning of the deepest convolutional blocks, achieved superior classification results with a testing accuracy of 98.15\%, compared to 92.59\% for the Custom CNN. Furthermore, Gradient-weighted Class Activation Mapping (Grad-CAM) was implemented to provide spatial interpretability of the models' predictions. The Grad-CAM heatmaps successfully demonstrated that the neural network classifier accurately isolates and focuses on the physical coordinates of the defects on the steel strips rather than spurious background noise, providing transparency critical for real-world automated surface inspection (ASI) deployment.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Convolutional Neural Networks, Transfer Learning, MobileNetV2, Automated Surface Inspection, Grad-CAM, Deep Learning, Quality Control
+\end{IEEEkeywords}
+
+\section{Introduction}
+\subsection{Background and Motivation}
+In the modern metallurgical industry, the production of hot-rolled steel strips is a massive, high-speed continuous process. During the rolling process, various physical and chemical anomalies can manifest on the surface of the steel. These anomalies, categorized as defects, include crazing, inclusions, patches, pitted surfaces, rolled-in scales, and scratches. Such defects occur due to a variety of uncontrollable environmental and mechanical factors, including rolling roll wear, mechanical vibration, slab impurities, and uneven temperature distribution during cooling.
+
+The presence of these defects significantly degrades the mechanical properties, corrosion resistance, and aesthetic appeal of the final metal product. Consequently, real-time quality control is a vital checkpoint for modern steel fabrication processes. Historically, automated surface inspection (ASI) systems relied heavily on manual visual inspection by trained human operators. However, human inspectors struggle to keep pace with rapid rolling speeds that can exceed 20 meters per second. Furthermore, psychological and physical fatigue leads to highly inconsistent error rates, resulting in both false positives (discarding good steel) and false negatives (shipping defective steel).
+
+\subsection{Problem Statement}
+The core problem is the need for an automated, highly accurate, and real-time defect classification system that does not rely on human intervention or brittle, handcrafted mathematical features. The system must be robust enough to handle varying lighting conditions, scale differences, and the inherent intraclass variation found in industrial environments.
+
+\subsection{Research Questions}
+This project seeks to address the following fundamental research questions:
+\begin{enumerate}
+    \item Can deep Convolutional Neural Networks (CNNs) effectively automate the classification of six distinct hot-rolled steel surface defects with an accuracy exceeding 90\%?
+    \item How does a Custom CNN, designed and trained from scratch, perform in comparison to a state-of-the-art pre-trained transfer learning architecture (MobileNetV2)?
+    \item Can Explainable AI (XAI) techniques, specifically Grad-CAM, be utilized to visually prove that the neural networks are making classification decisions based on the actual physical defects rather than arbitrary background noise?
+\end{enumerate}
+
+\section{Related Work}
+Automated inspection of hot-rolled steel strip defects has a rich and evolving literature, heavily mirroring the broader advancements in the field of computer vision.
+
+\subsection{Traditional Machine Learning Approaches}
+Early automated work focused entirely on traditional texture analysis and handcrafted feature extraction. Song and Yan \cite{song2013noise} proposed Completed Local Binary Patterns (CLBP) to capture defect patterns. They demonstrated that while texture features could classify certain distinct defects, they are highly susceptible to high noise levels and variations in steel surface textures. Similarly, researchers utilized Gabor filters and Gray Level Co-occurrence Matrices (GLCM) to extract statistical features, which were then fed into Support Vector Machines (SVM) or Random Forest classifiers. While computationally inexpensive, these methods proved brittle under variations in illumination, scale shifts, and ambient factory noise.
+
+\subsection{Deep Learning and CNNs}
+The transition to deep learning addressed the limitations of handcrafted features. Luo et al. \cite{luo2020automated} surveyed visual defect detection methods, showing definitively that CNN architectures outperform traditional handcrafted feature extraction in both classification accuracy and robustness against surface noise. CNNs automatically learn hierarchical spatial features directly from raw pixels. Yi et al. \cite{yi2017end} implemented a custom sequential CNN for the NEU dataset, demonstrating that an end-to-end network could extract features and classify defects simultaneously.
+
+\subsection{Transfer Learning Paradigms}
+More recently, Transfer learning has become the standard methodology in applied computer vision. Pre-training a deep network on massive datasets like ImageNet allows the model to learn highly generalized features. For edge computing and real-time factory processing where inference speed is critical, Sandler et al. proposed MobileNetV2 \cite{sandler2018mobilenetv2}. MobileNetV2 utilizes inverted residual blocks and depthwise separable convolutions to achieve high accuracy with a fraction of the computational parameters of standard networks.
+
+\section{Mathematical Foundations}
+To fully understand the mechanics of the deep learning pipeline, several mathematical foundations of Convolutional Neural Networks and Explainable AI must be established.
+
+\subsection{The Convolutional Operation}
+The core building block of a CNN is the convolutional layer, which applies a series of learnable filters to the input image to generate feature maps. For a 2D input image $I$ and a 2D filter $K$ of size $m \times n$, the discrete convolution operation at location $(i, j)$ is defined as:
+\begin{equation}
+(I * K)(i,j) = \sum_{m} \sum_{n} I(i+m, j+n) K(m,n)
+\end{equation}
+This operation captures spatial dependencies such as edges and textures, which are critical for identifying metallurgical defects.
+
+\subsection{Batch Normalization}
+Batch Normalization is applied after convolutions to stabilize and accelerate training by reducing internal covariate shift. For a mini-batch of activations $\mathcal{B} = \{x_{1}, \dots, x_{m}\}$, the normalized activation $\hat{x}_i$ is computed as:
+\begin{equation}
+\hat{x}_i = \frac{x_i - \mu_{\mathcal{B}}}{\sqrt{\sigma_{\mathcal{B}}^2 + \epsilon}}
+\end{equation}
+where $\mu_{\mathcal{B}}$ and $\sigma_{\mathcal{B}}^2$ are the batch mean and variance, respectively, and $\epsilon$ is a small constant for numerical stability.
+
+\subsection{Gradient-weighted Class Activation Mapping (Grad-CAM)}
+Grad-CAM provides visual explanations for CNN decisions. To obtain the class-discriminative localization map $L_{Grad-CAM}^c \in \mathbb{R}^{u \times v}$ for a specific class $c$, the gradient of the score for class $c$, $y^c$, is computed with respect to the feature map activations $A^k$ of a convolutional layer. The neuron importance weights $\alpha_k^c$ are calculated using global average pooling:
+\begin{equation}
+\alpha_k^c = \frac{1}{Z} \sum_i \sum_j \frac{\partial y^c}{\partial A_{i,j}^k}
+\end{equation}
+where $Z$ is the number of pixels in the feature map. The final Grad-CAM heatmap is a weighted combination of forward activation maps, passed through a ReLU to retain only features with a positive influence on the class:
+\begin{equation}
+L_{Grad-CAM}^c = ReLU \left( \sum_k \alpha_k^c A^k \right)
+\end{equation}
+
+\section{Dataset Description}
+This study utilizes the publicly available NEU Metal Surface Defect Database.
+
+\subsection{Dataset Characteristics}
+The dataset is perfectly balanced, containing a total of 1,800 grayscale images. There are exactly 300 samples for each of the six defect classes: Crazing, Inclusion, Patches, Pitted Surface, Rolled-in Scale, and Scratches. The original images are provided in BMP format with a resolution of 200x200 pixels.
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{eda_class_distribution.png}}
+\caption{Distribution of images across the 6 defect classes.}
+\label{fig:eda_dist}
+\end{figure}
+
+\begin{figure*}[t!]
+\centerline{\includegraphics[width=0.9\textwidth]{eda_defect_samples.png}}
+\caption{Visual samples of the six distinct hot-rolled steel surface defects present in the NEU database.}
+\label{fig:eda_samples}
+\end{figure*}
+
+\section{Methodology}
+The proposed framework consists of data ingestion, real-time data augmentation, convolutional model construction, and model interpretability.
+
+\subsection{Preprocessing \& Data Splitting}
+The preprocessing pipeline was designed to handle data programmatically:
+\begin{itemize}
+    \item \textbf{Resizing}: All images are bilinearly interpolated to 224x224 pixels to match MobileNetV2 inputs.
+    \item \textbf{Normalization}: Grayscale pixel values are normalized to $[0, 1]$.
+    \item \textbf{Stratified Splitting}: The dataset is split into Training (70\%), Validation (15\%), and Test (15\%) sets.
+\end{itemize}
+
+\subsection{Real-time Data Augmentation}
+To mitigate overfitting on 1,800 images, Keras \texttt{ImageDataGenerator} applied random rotations ($\pm 20^{\circ}$), flips, width/height shifts (10\%), and brightness adjustments (0.8 to 1.2).
+
+\subsection{Model Architectures}
+We implemented two architectures for comparison.
+
+\subsubsection{Custom CNN Design}
+The Custom CNN consists of four primary blocks. Each block contains a $3\times3$ \texttt{Conv2D} layer, Batch Normalization, and $2\times2$ \texttt{MaxPooling2D}. Filter counts double sequentially (32 $\rightarrow$ 64 $\rightarrow$ 128 $\rightarrow$ 256). The classification head uses Dense layers (512, 256) with 50\% Dropout.
+
+\subsubsection{MobileNetV2 Transfer Learning Design}
+We utilized MobileNetV2 pre-trained on ImageNet. Training occurred in two phases:
+\begin{enumerate}
+    \item \textbf{Feature Extraction}: The base weights were frozen. A new classification head was trained for 15 epochs.
+    \item \textbf{Fine-Tuning}: All layers from index 100 onwards were unfrozen and trained with a low learning rate ($1 \times 10^{-5}$) for an additional 15 epochs.
+\end{enumerate}
+
+\section{Experimental Setup}
+\begin{itemize}
+    \item \textbf{Loss Function}: Categorical Crossentropy.
+    \item \textbf{Optimizer}: Adam optimizer (Initial LR = 0.001).
+    \item \textbf{Callbacks}: \texttt{EarlyStopping} (patience=10), \texttt{ReduceLROnPlateau}, and \texttt{ModelCheckpoint}.
+\end{itemize}
+
+\section{Results}
+
+\subsection{Learning Curves and Convergence}
+Figure \ref{fig:custom_curves} shows the Custom CNN required 25 epochs to converge. Figure \ref{fig:mobile_curves} demonstrates MobileNetV2's rapid convergence, peaking at 98\% accuracy during fine-tuning.
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{custom_learning_curves.png}}
+\caption{Training and Validation Curves for the Custom CNN.}
+\label{fig:custom_curves}
+\end{figure}
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{mobilenetv2_learning_curves.png}}
+\caption{Training and Validation Curves for MobileNetV2.}
+\label{fig:mobile_curves}
+\end{figure}
+
+\subsection{Classification Results}
+MobileNetV2 dominated across all metrics, achieving 98.15\% Test Accuracy. The Custom CNN achieved 92.59\% Accuracy.
+
+\begin{figure*}[t!]
+\centerline{\includegraphics[width=0.8\textwidth]{comparison_table.png}}
+\caption{High-level architectural metrics and final evaluation results comparing the Custom CNN to MobileNetV2.}
+\label{fig:comp_table}
+\end{figure*}
+
+\subsection{Confusion Matrix Analysis}
+The Confusion Matrices reveal granular performance. MobileNetV2 resolved almost all edge cases that the Custom CNN failed on, specifically separating 'Inclusion' from 'Rolled-in scale'.
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{confusion_matrix_custom.png}}
+\caption{Confusion Matrix for the Custom CNN.}
+\label{fig:custom_cm}
+\end{figure}
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{confusion_matrix_mobilenetv2.png}}
+\caption{Confusion Matrix for MobileNetV2.}
+\label{fig:mobile_cm}
+\end{figure}
+
+\subsection{ROC Curves and AUC}
+MobileNetV2 achieved an Area Under the Curve (AUC) of 0.99 across all six defect classes.
+
+\begin{figure}[H]
+\centerline{\includegraphics[width=\linewidth]{roc_curves_mobilenetv2.png}}
+\caption{ROC Curves for MobileNetV2.}
+\label{fig:mobile_roc}
+\end{figure}
+
+\subsection{Interpretability via Grad-CAM}
+Grad-CAM heatmaps proved the AI's robustness. The highest activation intensities (deep red) map flawlessly onto the actual physical locations of the defects.
+
+\begin{figure*}[t!]
+\centerline{\includegraphics[width=\textwidth]{gradcam_comparison_sample.png}}
+\caption{Grad-CAM heatmaps proving the models are triggering on the actual physical defect geometries rather than background noise.}
+\label{fig:gradcam}
+\end{figure*}
+
+\subsection{Error Analysis}
+An analysis of the MobileNetV2 errors (1.85\% failure rate) showed that the rare misclassifications were predominantly borderline cases where human inspectors would also disagree.
+
+\begin{figure*}[t!]
+\centerline{\includegraphics[width=\textwidth]{error_analysis_samples.png}}
+\caption{Error Analysis demonstrating edge-case failure modes in MobileNetV2.}
+\label{fig:error_analysis}
+\end{figure*}
+
+\section{Discussion}
+The superiority of Transfer Learning was on full display. Despite MobileNetV2 being originally trained on natural images, its low-level filters generalized exceptionally well to industrial steel textures. The Custom CNN also performed admirably, proving that a network trained from scratch on heavily augmented data can still achieve industrial viability.
+
+\section{Limitations and Future Work}
+This architecture is strictly an Image Classifier. Future research must evolve this pipeline into an Object Detection framework (e.g., YOLOv8) to draw precise bounding boxes around multiple distinct defects in real-time.
+
+\section{Conclusion}
+This research successfully developed an automated deep learning system for hot-rolled steel surface defect classification. The fine-tuned MobileNetV2 model achieved an exceptional test accuracy of 98.15\%, vastly outperforming the Custom CNN's 92.59\%. Grad-CAM visualization successfully verified that the neural networks physically localize the correct defect anomalies, providing a robust, highly accurate computer vision solution ready for industrial quality control.
+
+\begin{thebibliography}{00}
+\bibitem{luo2020automated} Q. Luo, X. Fang, L. Liu, C. Yang, and Y. Sun, ``Automated Visual Defect Detection for Flat Steel Surface: A Survey,'' \textit{IEEE Transactions on Instrumentation and Measurement}, vol. 69, no. 9, pp. 6261-6280, Sept. 2020.
+\bibitem{song2013noise} K. Song and Y. Yan, ``A noise robust method based on completed local binary patterns for hot-rolled steel strip surface defects,'' \textit{Applied Surface Science}, vol. 285, pp. 858-864, Nov. 2013.
+\bibitem{yi2017end} L. Yi, G. Li, and M. Jiang, ``End-to-end steel strip surface defects recognition based on convolutional neural networks,'' \textit{Steel Research International}, vol. 88, no. 2, p. 1600068, Feb. 2017.
+\bibitem{he2016deep} K. He, X. Zhang, S. Ren, and J. Sun, ``Deep residual learning for image recognition,'' in \textit{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 2016, pp. 770-778.
+\bibitem{sandler2018mobilenetv2} M. Sandler, A. Howard, M. Zhu, A. Zhmoginov, and L. C. Chen, ``MobileNetV2: Inverted Residuals and Linear Bottlenecks,'' in \textit{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, 2018, pp. 4510-4520.
+\end{thebibliography}
+
+\end{document}
