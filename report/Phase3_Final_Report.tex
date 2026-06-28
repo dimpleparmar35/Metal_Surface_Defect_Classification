@@ -122,7 +122,49 @@ To mitigate overfitting on 1,800 images, Keras \texttt{ImageDataGenerator} appli
 We implemented two architectures for comparison.
 
 \subsubsection{Custom CNN Design}
-The Custom CNN consists of four primary blocks. Each block contains a $3\times3$ \texttt{Conv2D} layer, Batch Normalization, and $2\times2$ \texttt{MaxPooling2D}. Filter counts double sequentially (32 $\rightarrow$ 64 $\rightarrow$ 128 $\rightarrow$ 256). The classification head uses Dense layers (512, 256) with 50\% Dropout.
+The Custom CNN is a sequential architecture built entirely from scratch. It relies on alternating layers of convolutions and spatial pooling.
+The network consists of four primary blocks. Each block contains:
+\begin{enumerate}
+    \item A \texttt{Conv2D} layer with a $3\times3$ kernel and ReLU activation. The filter count doubles at each block (32 $\rightarrow$ 64 $\rightarrow$ 128 $\rightarrow$ 256) to capture increasingly complex hierarchical features.
+    \item A \textbf{Batch Normalization} layer to normalize the activations, reducing internal covariate shift and allowing for higher learning rates.
+    \item A \textbf{MaxPooling2D} layer with a $2\times2$ pool size to reduce spatial dimensions and computational load while providing translation invariance.
+\end{enumerate}
+
+Table \ref{tab:architecture} provides a detailed mathematical breakdown of the Custom CNN architecture, including spatial dimensions and parameter counts at each layer.
+
+\begin{table}[htbp]
+\caption{Custom CNN Architecture Details}
+\begin{center}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Layer (Type)} & \textbf{Output Shape} & \textbf{Kernel} & \textbf{Params} \\
+\midrule
+InputLayer & (224, 224, 3) & - & 0 \\
+Conv2D (Block 1) & (224, 224, 32) & 3$\times$3 & 896 \\
+BatchNorm & (224, 224, 32) & - & 128 \\
+MaxPooling2D & (112, 112, 32) & 2$\times$2 & 0 \\
+Conv2D (Block 2) & (112, 112, 64) & 3$\times$3 & 18,496 \\
+BatchNorm & (112, 112, 64) & - & 256 \\
+MaxPooling2D & (56, 56, 64) & 2$\times$2 & 0 \\
+Conv2D (Block 3) & (56, 56, 128) & 3$\times$3 & 73,856 \\
+BatchNorm & (56, 56, 128) & - & 512 \\
+MaxPooling2D & (28, 28, 128) & 2$\times$2 & 0 \\
+Conv2D (Block 4) & (28, 28, 256) & 3$\times$3 & 295,168 \\
+BatchNorm & (28, 28, 256) & - & 1,024 \\
+MaxPooling2D & (14, 14, 256) & 2$\times$2 & 0 \\
+Flatten & (50176) & - & 0 \\
+Dense (Hidden)& (512) & - & 25,690k \\
+Dropout (0.5) & (512) & - & 0 \\
+Dense (Hidden)& (256) & - & 131,328 \\
+Dropout (0.5) & (256) & - & 0 \\
+Dense (Classifier) & (6) & - & 1,542 \\
+\bottomrule
+\end{tabular}
+\label{tab:architecture}
+\end{center}
+\end{table}
+
+Following the convolutional base, the 3D tensor is flattened into a 1D vector and passed into a fully connected Dense classification head. This head features two Dense layers (512 and 256 neurons) equipped with 50\% Dropout to severely penalize over-reliance on specific nodes, further reducing overfitting. The final layer utilizes a Softmax activation function to output a probability distribution across the 6 defect classes..
 
 \subsubsection{MobileNetV2 Transfer Learning Design}
 We utilized MobileNetV2 pre-trained on ImageNet. Training occurred in two phases:
