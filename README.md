@@ -129,8 +129,8 @@ The models were benchmarked on a stratified 15% holdout test set (270 images). B
 
 | Architecture | Test Accuracy | Test Precision (Weighted) | Test Recall (Weighted) | Test F1 Score (Weighted) | Training Duration |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Custom CNN** | 92.59% | 0.9284 | 0.9259 | 0.9252 | ~3.08 minutes |
-| **MobileNetV2** | **98.15%** | **0.9824** | **98.15%** | **98.15%** | ~5.75 minutes |
+| **Custom CNN** | 16.67% | 0.0288 | 0.1667 | 0.0492 | ~3.14 minutes |
+| **MobileNetV2** | **100.00%** | **1.0000** | **1.0000** | **1.0000** | ~2.65 minutes |
 
 ### Visual Deliverables (`outputs/figures/`)
 * **Learning Curves**: Show loss and accuracy optimization for training and validation splits.
