@@ -5,7 +5,8 @@
 
 ## 📝 Phase 2 Submission Links
 * **GitHub Repository:** [https://github.com/dimpleparmar35/Metal_Surface_Defect_Classification](https://github.com/dimpleparmar35/Metal_Surface_Defect_Classification)
-* **Kaggle Notebook:** [Insert your Kaggle Notebook Link here, if applicable]
+* **Kaggle Notebook:** [https://www.kaggle.com/code/dimpleparmar23/industrial-defect-detection](https://www.kaggle.com/code/dimpleparmar23/industrial-defect-detection)
+* **Presentation Website:** [https://dimpleparmar35.github.io/Metal_Surface_Defect_Classification/](https://dimpleparmar35.github.io/Metal_Surface_Defect_Classification/)
 
 ---
 
