@@ -265,24 +265,39 @@ class_names  = list(train_gen.class_indices.keys())
 print(f"Classes detected: {class_names}")
 
 # ── Augmentation preview ───────────────────────────────────────────────────────
-sample_path = train_df.iloc[0]['filepath']
-img_aug = load_img(sample_path, target_size=TARGET_SIZE)
-x_aug   = img_to_array(img_aug) / 255.0
-x_aug   = np.expand_dims(x_aug, axis=0)
+# NOTE: We use a SEPARATE preview generator with NO rescale here.
+# The main train_datagen already has rescale=1/255 built in, so if we
+# also divide by 255 manually the image becomes black (double normalization).
+preview_datagen = ImageDataGenerator(
+    rotation_range=20,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
+    zoom_range=0.2,
+    brightness_range=[0.8, 1.2],
+    horizontal_flip=True,
+    vertical_flip=True,
+    fill_mode='nearest'
+    # NO rescale here — pixel values stay in [0,255] for correct display
+)
 
-plt.figure(figsize=(12, 3))
+sample_path = train_df.iloc[0]['filepath']
+img_aug     = load_img(sample_path, target_size=TARGET_SIZE)
+x_aug       = np.expand_dims(img_to_array(img_aug), axis=0)  # keep [0,255] range
+
+plt.figure(figsize=(14, 3))
 plt.subplot(1, 5, 1)
-plt.imshow(x_aug[0])
-plt.title("Original")
+plt.imshow(img_aug)
+plt.title("Original", fontsize=9)
 plt.axis('off')
 
-aug_gen = train_datagen.flow(x_aug, batch_size=1)
+aug_gen = preview_datagen.flow(x_aug, batch_size=1, seed=42)
 for i in range(4):
     batch = next(aug_gen)
     plt.subplot(1, 5, i + 2)
-    plt.imshow(batch[0])
-    plt.title(f"Augmented {i+1}")
+    plt.imshow(batch[0].astype('uint8'))  # cast back to uint8 for display
+    plt.title(f"Augmented {i+1}", fontsize=9)
     plt.axis('off')
+
 plt.suptitle("Real-time Training Augmentation Examples", weight='bold')
 plt.tight_layout()
 plt.savefig('outputs/figures/preprocessing_augmentation_samples.png', bbox_inches='tight', dpi=150)
