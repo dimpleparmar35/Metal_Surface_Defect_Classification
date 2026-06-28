@@ -545,25 +545,42 @@ plot_roc(y_true, mobile_metrics[4], "MobileNetV2")
 
 # %%
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
-    grad_model = tf.keras.models.Model(
-        inputs=[model.inputs],
-        outputs=[model.get_layer(last_conv_layer_name).output, model.output]
-    )
+    """
+    Keras 3 compatible Grad-CAM.
+    Instead of using layer.output (which fails in Keras 3 Sequential models),
+    we manually iterate through layers and use GradientTape to watch the
+    intermediate conv output tensor directly.
+    """
+    img_tensor = tf.cast(img_array, tf.float32)
+
     with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(img_array)
+        x           = img_tensor
+        conv_output = None
+
+        # Forward pass layer-by-layer, capturing conv output at target layer
+        for layer in model.layers:
+            x = layer(x)
+            if layer.name == last_conv_layer_name:
+                conv_output = x
+                tape.watch(conv_output)  # tell tape to track this tensor
+
+        predictions = x
+        if conv_output is None:
+            raise ValueError(f"Layer '{last_conv_layer_name}' not found in model.")
+
         if pred_index is None:
             pred_index = tf.argmax(predictions[0])
         class_channel = predictions[:, pred_index]
 
-    grads        = tape.gradient(class_channel, conv_outputs)
+    grads        = tape.gradient(class_channel, conv_output)
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-    conv_outputs = conv_outputs[0]
-    heatmap      = conv_outputs @ pooled_grads[..., tf.newaxis]
+    conv_output  = conv_output[0]
+    heatmap      = conv_output @ pooled_grads[..., tf.newaxis]
     heatmap      = tf.squeeze(heatmap)
     heatmap      = tf.maximum(heatmap, 0.0)
     max_val      = tf.math.reduce_max(heatmap)
     if max_val == 0:
-        max_val = 1e-10
+        max_val  = 1e-10
     return (heatmap / max_val).numpy()
 
 def overlay_gradcam(img_path, heatmap, alpha=0.45):
